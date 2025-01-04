@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Weather App</title>
+    <link rel="stylesheet" type="text/css" href="/style.css" />
+    <link
+      rel="stylesheet"
+      href="https://use.fontawesome.com/releases/v5.14.0/css/all.css"
+    />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+  </head>
+  <body>
+    <div class="container">
+      <h1>API's</h1>
+      <form action="/weather" method="get">
+        <input type="text" name="city" placeholder="Enter city name" />
+        <button type="submit">Get Weather</button>
+      </form>
+
+      <% if (error) { %>
+        <p class="error"><%= error %></p>
+      <% } else if (weather) { %>
+        <div class="card">
+          <p>
+            <i class="fas fa-thermometer-half"></i> 
+            <strong>Temperature:</strong> <%= weather.main.temp %>&deg;C
+          </p>
+          
+          <p>
+            <i class="fas fa-temperature-low"></i> 
+            <strong>Feels Like:</strong> <%= weather.main.feels_like %>&deg;C
+          </p>
+        
+          <p>
+            <i class="fas fa-cloud"></i> 
+            <strong>Description:</strong> <%= weather.weather[0].description %>
+          </p>
+        
+          <p>
+            <img src="http://openweathermap.org/img/wn/<%= weather.weather[0].icon %>@2x.png" alt="Weather icon" />
+          </p>
+        
+          <p>
+            <i class="fas fa-location-arrow"></i> 
+            <strong>Coordinates:</strong> <%= weather.coord.lat %>, <%= weather.coord.lon %>
+          </p>
+        
+          <p>
+            <i class="fas fa-map-marker-alt"></i> 
+            <strong>Location:</strong> <%= weather.name %>, <%= weather.sys.country %>
+          </p>
+        
+          <p>
+            <i class="fas fa-tint"></i> 
+            <strong>Humidity:</strong> <%= weather.main.humidity %>%
+          </p>
+        
+          <p>
+            <i class="fas fa-arrow-up"></i> 
+            <strong>Pressure:</strong> <%= weather.main.pressure %> hPa
+          </p>
+        
+          <p>
+            <i class="fas fa-wind"></i> 
+            <strong>Wind Speed:</strong> <%= weather.wind.speed %> m/s
+          </p>
+        
+          <p>
+            <i class="fas fa-cloud-rain"></i> 
+            <strong>Rain Volume (last 3 hours):</strong> <%= weather.rain ? weather.rain["3h"] : 0 %> mm
+          </p>
+        </div>
+
+        <div id="map" data-lat="<%= weather.coord.lat %>" data-lon="<%= weather.coord.lon %>" data-name="<%= weather.name %>"></div>
+      <% } %>
+
+      <% if (weather && places.length > 0) { %>
+        <div class="card">
+          <h2>Popular Places Nearby</h2>
+          <ul class="places-list">
+            <% places.forEach(place => { %>
+              <li class="place-item">
+                <h3><%= place.name %></h3>
+                <p><strong>Category:</strong> <%= place.categories[0]?.name || "N/A" %></p>
+                <p><strong>Address:</strong> <%= place.location.address || "N/A" %></p>
+                <p><strong>Distance:</strong> <%= (place.distance / 1000).toFixed(2) %> km</p>
+              </li>
+            <% }); %>
+          </ul>
+        </div>
+      <% } else if (weather) { %>
+        <p>No places found nearby.</p>
+      <% } %>
+
+      <% if (weather && news.length > 0) { %>
+        <div class="card">
+          <h2>Latest News About <%= weather.name %></h2>
+          <ul class="news-list">
+            <% news.forEach(article => { %>
+              <li class="news-item">
+                <h3><a href="<%= article.url %>" target="_blank"><%= article.title %></a></h3>
+                <p><%= article.description %></p>
+                <p><strong>Source:</strong> <%= article.source.name %></p>
+              </li>
+            <% }); %>
+          </ul>
+        </div>
+      <% } else if (weather) { %>
+        <p>No news found for the specified city.</p>
+      <% } %>
+    </div>
+
+    <script>
+      const mapDiv = document.getElementById('map');
+      if (mapDiv) {
+        const lat = parseFloat(mapDiv.dataset.lat);
+        const lon = parseFloat(mapDiv.dataset.lon);
+        const cityName = mapDiv.dataset.name;
+
+        const map = L.map('map').setView([lat, lon], 10);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+        L.marker([lat, lon]).addTo(map)
+          .bindPopup(`<b>${cityName}</b><br>Coordinates: ${lat}, ${lon}`)
+          .openPopup();
+      }
+    </script>
+  </body>
+</html>
